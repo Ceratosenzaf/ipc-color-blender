@@ -12,3 +12,11 @@ Color getRandomColor() {
 
   return toColor(dist(mt), dist(mt), dist(mt));
 }
+
+bool isOverlapping(WindowInfo a, WindowInfo b) {
+  bool overlapX = a.x < b.x + b.w && a.x + a.w > b.x;
+  bool overlapY = a.y < b.y + b.h && a.y + a.h > b.y;
+  return overlapX && overlapY;
+}
+
+void createTexture(WindowInfo* windows) {}

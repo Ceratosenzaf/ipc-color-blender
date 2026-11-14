@@ -24,7 +24,7 @@ void changeColorOnClick(GLFWwindow* win, Color* color) {
   glfwSetMouseButtonCallback(
       win, [](GLFWwindow* win, int button, int action, int mods) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-          auto* color = static_cast<Color*>(glfwGetWindowUserPointer(win));
+          Color* color = static_cast<Color*>(glfwGetWindowUserPointer(win));
           *color = getRandomColor();
         }
       });
@@ -36,7 +36,8 @@ void handleRender(GLFWwindow* win, Color* color) {
   glfwGetWindowSize(win, &w, &h);
 
   WindowInfo info = {x, y, w, h, (*color)[0], (*color)[1], (*color)[2]};
-  handleCommunication(&info);
+  WindowInfo* allWindows = handleCommunication(&info);
+  createTexture(allWindows);
 
   glClearColor((*color)[0], (*color)[1], (*color)[2], 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
