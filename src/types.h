@@ -4,9 +4,11 @@ typedef float* Color;
 
 struct WindowInfo {
   int x, y, w, h;
-  Color color;
+  float r, g, b;
+  time_t updatedAt;
 };
 
+const int SHARED_MEMORY_PAGE_SIZE = 10;
 struct SharedMemory {
-  WindowInfo window;  // TODO: handle multiple windows
+  WindowInfo windows[SHARED_MEMORY_PAGE_SIZE];  // TODO: handle multiple pages
 };

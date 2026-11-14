@@ -32,7 +32,7 @@ void handleRender(GLFWwindow* win, Color* color) {
   glfwGetWindowPos(win, &x, &y);
   glfwGetWindowSize(win, &w, &h);
 
-  WindowInfo info = {x, y, w, h, *color};
+  WindowInfo info = {x, y, w, h, (*color)[0], (*color)[1], (*color)[2]};
   handleCommunication(&info);
 
   glClearColor((*color)[0], (*color)[1], (*color)[2], 1.0f);
