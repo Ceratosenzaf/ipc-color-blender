@@ -10,6 +10,9 @@ const int WIN_W = 400;
 const int WIN_H = 400;
 const char* WIN_TITLE = "Color Blender";
 
+const double REFRESH_RATE = 1.0 / 60.0;  // 60FPS
+double lastRefresh = 0;
+
 void handleClose(const char* msg, GLFWwindow* win) {
   std::cout << msg << std::endl;
   if (win) glfwDestroyWindow(win);
@@ -40,6 +43,16 @@ void handleRender(GLFWwindow* win, Color* color) {
   glfwSwapBuffers(win);
 }
 
+void handleTick(GLFWwindow* win, Color* color) {
+  double now = glfwGetTime();
+  double elapsed = now - lastRefresh;
+
+  if (elapsed >= REFRESH_RATE) {
+    handleRender(win, color);
+    lastRefresh = now;
+  }
+}
+
 void handleWindow() {
   if (!glfwInit()) return handleClose("ERROR: Could not initialize GLFW", NULL);
 
@@ -52,7 +65,7 @@ void handleWindow() {
   glfwMakeContextCurrent(win);
 
   while (!glfwWindowShouldClose(win)) {
-    handleRender(win, &color);
+    handleTick(win, &color);
     glfwPollEvents();
   }
 
