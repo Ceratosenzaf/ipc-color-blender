@@ -1,63 +1,14 @@
-#include <GLFW/glfw3.h>
 #include <unistd.h>
 
-#include <iostream>
-#include <random>
-// #include <sys/shm.h>
-// #include <sys/mman.h>
-
-void spawnProcesses(int count) {
-  for (int i = 0; i < count; i++)
-    if (fork() == 0) return;
-}
-
-int handleError(const char* error) {
-  std::cout << "Error: " << error << std::endl;
-  glfwTerminate();
-  return -1;
-}
-
-float* getRandomColors() {
-  std::random_device rd;
-  std::mt19937 mt(rd());
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
-  const float R = dist(mt);
-  const float G = dist(mt);
-  const float B = dist(mt);
-
-  return new float[3]{R, G, B};
-}
+#include "window.cpp"
 
 int main(int argc, char* argv[]) {
-  const int desiredProcesses = argc >= 2 ? atoi(argv[1]) : 1;
-  spawnProcesses(desiredProcesses - 1);
+  int desiredProcesses = argc >= 2 ? atoi(argv[1]) : 1;
 
-  if (!glfwInit()) return handleError("Could not initialize GLFW");
+  for (int i = 0; i < desiredProcesses - 1; i++)
+    if (fork() == 0) break;
 
-  GLFWwindow* win = glfwCreateWindow(400, 400, "test", NULL, NULL);
-  if (!win) return handleError("Could  not open window");
+  handleWindow();
 
-  glfwMakeContextCurrent(win);
-
-  float* colors = getRandomColors();
-  glfwSetWindowUserPointer(win, &colors);
-  glfwSetMouseButtonCallback(
-      win, [](GLFWwindow* win, int button, int action, int mods) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-          auto* colors = static_cast<float**>(glfwGetWindowUserPointer(win));
-          *colors = getRandomColors();
-        }
-      });
-
-  while (!glfwWindowShouldClose(win)) {
-    glClearColor(colors[0], colors[1], colors[2], 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glfwSwapBuffers(win);
-    glfwPollEvents();
-  }
-
-  glfwDestroyWindow(win);
-  glfwTerminate();
   return 0;
 }
