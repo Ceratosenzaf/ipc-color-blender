@@ -41,6 +41,15 @@ int main(int argc, char* argv[]) {
   glfwMakeContextCurrent(win);
 
   float* colors = getRandomColors();
+  glfwSetWindowUserPointer(win, &colors);
+  glfwSetMouseButtonCallback(
+      win, [](GLFWwindow* win, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+          auto* colors = static_cast<float**>(glfwGetWindowUserPointer(win));
+          *colors = getRandomColors();
+        }
+      });
+
   while (!glfwWindowShouldClose(win)) {
     glClearColor(colors[0], colors[1], colors[2], 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
