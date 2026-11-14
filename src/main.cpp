@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <random>
 // #include <sys/shm.h>
 // #include <sys/mman.h>
 
@@ -17,17 +18,15 @@ int handleError(const char* error) {
 }
 
 float* getRandomColors() {
-  srand(time(NULL) ^ (getpid() << 16));
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-  auto getColor = []() {
-    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-  };
+  const float R = dist(mt);
+  const float G = dist(mt);
+  const float B = dist(mt);
 
-  const float R = getColor();
-  const float G = getColor();
-  const float B = getColor();
-
-  return new float[]{R, G, B};
+  return new float[3]{R, G, B};
 }
 
 int main(int argc, char* argv[]) {
