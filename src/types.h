@@ -1,10 +1,17 @@
 #pragma once
 
-typedef float* Color;
+struct Bounds {
+  int x, y;
+  int w, h;
+};
+
+struct Color {
+  float r, g, b;
+};
 
 struct WindowInfo {
-  int x, y, w, h;
-  float r, g, b;
+  Bounds bounds;
+  Color color;
   time_t updatedAt;
 };
 

@@ -30,16 +30,19 @@ void changeColorOnClick(GLFWwindow* win, Color* color) {
       });
 }
 
-void handleRender(GLFWwindow* win, Color* color) {
+Bounds getBounds(GLFWwindow* win) {
   int x, y, w, h;
   glfwGetWindowPos(win, &x, &y);
   glfwGetWindowSize(win, &w, &h);
+  return Bounds{x, y, w, h};
+}
 
-  WindowInfo info = {x, y, w, h, (*color)[0], (*color)[1], (*color)[2]};
+void handleRender(GLFWwindow* win, Color* color) {
+  WindowInfo info = {getBounds(win), *color};
   WindowInfo* allWindows = handleCommunication(&info);
   createTexture(allWindows);
 
-  glClearColor((*color)[0], (*color)[1], (*color)[2], 1.0f);
+  glClearColor(color->r, color->g, color->b, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   glfwSwapBuffers(win);
 }
