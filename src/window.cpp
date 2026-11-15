@@ -44,7 +44,7 @@ Bounds getBounds(GLFWwindow* win) {
 void handleRender(GLFWwindow* win, Color* color) {
   WindowInfo info = {getBounds(win), *color};
   auto windows = handleCommunication(&info);
-  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);  // 10ms
+  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);
 
   glViewport(0, 0, info.bounds.w, info.bounds.h);
 
@@ -59,31 +59,31 @@ void handleRender(GLFWwindow* win, Color* color) {
 
   // TODO: recompute only the changed part, not the whole texture
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, info.bounds.w, info.bounds.h, 0,
-               GL_RGB, GL_FLOAT, matrix.data());  // 4ms
+               GL_RGB, GL_FLOAT, matrix.data());
 
   glColor3f(1.0f, 1.0f, 1.0f);
 
   glBegin(GL_QUADS);
 
-  // Bottom-Left screen -> Bottom-Left matrix
+  // bottom-left
   glTexCoord2f(0.0f, 1.0f);
   glVertex2f(-1.0f, -1.0f);
 
-  // Bottom-Right screen -> Bottom-Right matrix
+  // bottom-right
   glTexCoord2f(1.0f, 1.0f);
   glVertex2f(1.0f, -1.0f);
 
-  // Top-Right screen -> Top-Right matrix
+  // top-right
   glTexCoord2f(1.0f, 0.0f);
   glVertex2f(1.0f, 1.0f);
 
-  // Top-Left screen -> Top-Left matrix
+  // top-left
   glTexCoord2f(0.0f, 0.0f);
   glVertex2f(-1.0f, 1.0f);
 
   glEnd();
 
-  glfwSwapBuffers(win);  // 3 ms
+  glfwSwapBuffers(win);
 
   glBindTexture(GL_TEXTURE_2D, 0);
   glDeleteTextures(1, &textureId);

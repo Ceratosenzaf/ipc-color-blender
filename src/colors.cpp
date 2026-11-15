@@ -1,4 +1,4 @@
-
+#include <algorithm>
 #include <random>
 
 #include "types.h"
@@ -25,40 +25,21 @@ Color getNextPaletteColor() {
   return PALETTE[paletteColorIndex];
 }
 
-Color operator+(Color lhs, Color rhs) {
-  return {lhs.r + rhs.r, lhs.g + rhs.g, lhs.b + rhs.b};
-}
-
-void blend(Color* acc, int* count) {
-  if (*count <= 1) return;
-  acc->r /= *count;
-  acc->g /= *count;
-  acc->b /= *count;
-}
-
-int max(int lhs, int rhs) {
-  if (lhs > rhs) return lhs;
-  return rhs;
-}
-
-int min(int lhs, int rhs) {
-  if (lhs < rhs) return lhs;
-  return rhs;
-}
-
 void restrictToBounds(Bounds* src, Bounds* dst) {
-  int maxX = min(src->x + src->w, dst->x + dst->w);
-  int maxY = min(src->y + src->h, dst->y + dst->h);
-  src->x = max(src->x, dst->x);
-  src->y = max(src->y, dst->y);
-  src->w = max(maxX - src->x, 0);
-  src->h = max(maxY - src->y, 0);
+  int maxX = std::min(src->x + src->w, dst->x + dst->w);
+  int maxY = std::min(src->y + src->h, dst->y + dst->h);
+  src->x = std::max(src->x, dst->x);
+  src->y = std::max(src->y, dst->y);
+  src->w = std::max(maxX - src->x, 0);
+  src->h = std::max(maxY - src->y, 0);
 }
 
 typedef std::vector<Color> ColorMatrix;
 ColorMatrix getColorMatrix(Bounds* bounds, std::vector<WindowInfo>* windows) {
-  ColorMatrix matrix(bounds->w * bounds->h, Color{0, 0, 0});
-  std::vector<int> counts(bounds->w * bounds->h, 0);
+  int totalPixels = bounds->w * bounds->h;
+
+  ColorMatrix matrix(totalPixels, Color{0, 0, 0});
+  std::vector<int> counts(totalPixels, 0);
 
   for (WindowInfo& info : *windows) {
     restrictToBounds(&info.bounds, bounds);
@@ -73,20 +54,20 @@ ColorMatrix getColorMatrix(Bounds* bounds, std::vector<WindowInfo>* windows) {
       int* rowCounts = counts.data() + cellOffset;
 
       for (int i = 0; i < info.bounds.w; i++) {
-        rowMatrix[i] = rowMatrix[i] + info.color;
+        rowMatrix[i].r += info.color.r;
+        rowMatrix[i].g += info.color.g;
+        rowMatrix[i].b += info.color.b;
         rowCounts[i]++;
       }
     }
   }
 
-  for (int j = 0; j < bounds->h; j++) {
-    int rowOffset = j * bounds->w;
-
-    Color* rowMatrix = matrix.data() + rowOffset;
-    int* rowCounts = counts.data() + rowOffset;
-
-    for (int i = 0; i < bounds->w; i++) {
-      blend(&rowMatrix[i], &rowCounts[i]);
+  for (int i = 0; i < totalPixels; i++) {
+    int count = counts[i];
+    if (count > 1) {
+      matrix[i].r /= count;
+      matrix[i].g /= count;
+      matrix[i].b /= count;
     }
   }
 
