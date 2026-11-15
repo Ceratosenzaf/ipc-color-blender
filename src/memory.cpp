@@ -13,19 +13,20 @@ int memoryIndex = -1;
 
 Time now() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now().time_since_epoch());
+             std::chrono::system_clock::now().time_since_epoch())
+      .count();
 }
 
-bool isActive(WindowInfo info) {
+bool isActive(WindowInfo* info) {
   const int ACTIVE_THRESHOLD = 100;
-  Time elapsed = now() - info.updatedAt;
-  return elapsed.count() <= ACTIVE_THRESHOLD;
+  Time elapsed = now() - info->updatedAt;
+  return elapsed <= ACTIVE_THRESHOLD;
 }
 
 void upsertMemoryIndex(SharedMemory* mem) {
   if (memoryIndex != -1) return;
   for (int i = 0; i < SHARED_MEMORY_PAGE_SIZE; i++) {
-    if (!isActive((mem->windows)[i])) {
+    if (!isActive(&(mem->windows)[i])) {
       memoryIndex = i;
       return;
     }
@@ -52,8 +53,8 @@ std::vector<WindowInfo> handleCommunication(WindowInfo* info) {
   upsertWindowInfo(mem, info);
 
   std::vector<WindowInfo> windows;
-  for (WindowInfo win : mem->windows) {
-    if (isActive(win)) windows.push_back(win);
+  for (WindowInfo& win : mem->windows) {
+    if (isActive(&win)) windows.push_back(win);
   }
 
   return windows;

@@ -1,7 +1,5 @@
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-
 #include "colors.cpp"
 #include "memory.cpp"
 #include "types.h"
@@ -13,8 +11,7 @@ const char* WIN_TITLE = "Color Blender";
 const double REFRESH_RATE = 1.0 / 60.0;  // 60FPS
 double lastRefresh = 0;
 
-void handleClose(const char* msg, GLFWwindow* win) {
-  std::cout << msg << std::endl;
+void handleClose(GLFWwindow* win) {
   if (win) glfwDestroyWindow(win);
   glfwTerminate();
 }
@@ -45,7 +42,8 @@ Bounds getBounds(GLFWwindow* win) {
 
 void handleRender(GLFWwindow* win, Color* color) {
   WindowInfo info = {getBounds(win), *color};
-  ColorMatrix matrix = getColorMatrix(info.bounds, handleCommunication(&info));
+  auto windows = handleCommunication(&info);
+  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);
 
   glViewport(0, 0, info.bounds.w, info.bounds.h);
   glClear(GL_COLOR_BUFFER_BIT);
@@ -103,10 +101,10 @@ void handleTick(GLFWwindow* win, Color* color) {
 }
 
 void handleWindow() {
-  if (!glfwInit()) return handleClose("ERROR: Could not initialize GLFW", NULL);
+  if (!glfwInit()) return handleClose(NULL);
 
   GLFWwindow* win = glfwCreateWindow(WIN_W, WIN_H, WIN_TITLE, NULL, NULL);
-  if (!win) return handleClose("ERROR: Could  not open window", NULL);
+  if (!win) return handleClose(NULL);
 
   Color color = getRandomColor();
   changeColorOnClick(win, &color);
@@ -118,5 +116,5 @@ void handleWindow() {
     glfwPollEvents();
   }
 
-  return handleClose("Window Closed", win);
+  return handleClose(win);
 }

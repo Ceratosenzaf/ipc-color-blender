@@ -25,14 +25,15 @@ Color getNextPaletteColor() {
   return PALETTE[paletteColorIndex];
 }
 
-bool isOverlapping(Bounds lhs, Bounds rhs) {
-  bool overlapX = lhs.x < rhs.x + rhs.w && lhs.x + lhs.w > rhs.x;
-  bool overlapY = lhs.y < rhs.y + rhs.h && lhs.y + lhs.h > rhs.y;
+bool isOverlapping(const Bounds* lhs, const Bounds* rhs) {
+  bool overlapX = lhs->x < rhs->x + rhs->w && lhs->x + lhs->w > rhs->x;
+  bool overlapY = lhs->y < rhs->y + rhs->h && lhs->y + lhs->h > rhs->y;
   return overlapX && overlapY;
 }
 
-bool hasPixel(Bounds bounds, int x, int y) {
-  return isOverlapping(bounds, Bounds{x, y, 1, 1});
+bool hasPixel(const Bounds* bounds, int* x, int* y) {
+  Bounds cell = {*x, *y, 1, 1};
+  return isOverlapping(bounds, &cell);
 }
 
 Color operator+(Color lhs, Color rhs) {
@@ -43,12 +44,12 @@ Color blend(Color acc, int count) {
   return {acc.r / count, acc.g / count, acc.b / count};
 }
 
-Color avgForPixel(std::vector<WindowInfo> windows, int x, int y) {
+Color avgForPixel(std::vector<WindowInfo>* windows, int* x, int* y) {
   Color acc = {0, 0, 0};
   int count = 0;
 
-  for (WindowInfo info : windows) {
-    if (hasPixel(info.bounds, x, y)) {
+  for (const WindowInfo& info : *windows) {
+    if (hasPixel(&info.bounds, x, y)) {
       acc = acc + info.color;
       count++;
     }
@@ -58,12 +59,14 @@ Color avgForPixel(std::vector<WindowInfo> windows, int x, int y) {
 }
 
 typedef std::vector<Color> ColorMatrix;
-ColorMatrix getColorMatrix(Bounds bounds, std::vector<WindowInfo> windows) {
+ColorMatrix getColorMatrix(Bounds* bounds, std::vector<WindowInfo>* windows) {
   ColorMatrix matrix;
 
-  for (int y = bounds.y; y < bounds.y + bounds.h; y++) {
-    for (int x = bounds.x; x < bounds.x + bounds.w; x++) {
-      matrix.push_back(avgForPixel(windows, x, y));
+  matrix.reserve(bounds->w * bounds->h);
+
+  for (int y = bounds->y; y < bounds->y + bounds->h; y++) {
+    for (int x = bounds->x; x < bounds->x + bounds->w; x++) {
+      matrix.push_back(avgForPixel(windows, &x, &y));
     }
   }
 

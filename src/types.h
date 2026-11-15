@@ -1,5 +1,4 @@
 #pragma once
-#include <chrono>
 
 struct Bounds {
   int x, y;
@@ -10,7 +9,7 @@ struct Color {
   float r, g, b;
 };
 
-typedef std::chrono::milliseconds Time;
+typedef int64_t Time;
 
 struct WindowInfo {
   Bounds bounds;
