@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include <random>
 
 #include "types.h"
@@ -11,10 +12,52 @@ Color getRandomColor() {
   return Color{dist(mt), dist(mt), dist(mt)};
 }
 
-bool isOverlapping(Bounds a, Bounds b) {
-  bool overlapX = a.x < b.x + b.w && a.x + a.w > b.x;
-  bool overlapY = a.y < b.y + b.h && a.y + a.h > b.y;
+bool isOverlapping(Bounds lhs, Bounds rhs) {
+  bool overlapX = lhs.x < rhs.x + rhs.w && lhs.x + lhs.w > rhs.x;
+  bool overlapY = lhs.y < rhs.y + rhs.h && lhs.y + lhs.h > rhs.y;
   return overlapX && overlapY;
 }
 
-void createTexture(WindowInfo* windows) {}
+bool hasPixel(Bounds bounds, int x, int y) {
+  return isOverlapping(bounds, Bounds{x, y, 1, 1});
+}
+
+Color operator+(Color lhs, Color rhs) {
+  return {lhs.r + rhs.r, lhs.g + rhs.g, lhs.b + rhs.b};
+}
+
+Color avg(Color acc, int count) {
+  return {acc.r / count, acc.g / count, acc.b / count};
+}
+
+Color avgForPixel(std::vector<WindowInfo> windows, int x, int y) {
+  Color acc = {0, 0, 0};
+  int count = 0;
+
+  for (WindowInfo info : windows) {
+    if (hasPixel(info.bounds, x, y)) {
+      acc = acc + info.color;
+      count++;
+    }
+  }
+
+  return avg(acc, count);
+}
+
+typedef std::vector<Color> ColorRow;
+typedef std::vector<ColorRow> ColorMatrix;
+ColorMatrix getColorMatrix(Bounds bounds, std::vector<WindowInfo> windows) {
+  ColorMatrix matrix;
+
+  for (int y = bounds.y; y < bounds.y + bounds.h; y++) {
+    ColorRow row;
+
+    for (int x = bounds.x; x < bounds.x + bounds.w; x++) {
+      row.push_back(avgForPixel(windows, x, y));
+    }
+
+    matrix.push_back(row);
+  }
+
+  return matrix;
+}

@@ -38,7 +38,7 @@ void upsertWindowInfo(SharedMemory* mem, WindowInfo* info) {
   (mem->windows)[memoryIndex].updatedAt = now();
 }
 
-WindowInfo* handleCommunication(WindowInfo* info) {
+std::vector<WindowInfo> handleCommunication(WindowInfo* info) {
   int fd = shm_open(SHARED_MEMORY_NAME, O_RDWR | O_CREAT, 0600);
 
   ftruncate(fd, MEMORY_SIZE);
@@ -53,5 +53,5 @@ WindowInfo* handleCommunication(WindowInfo* info) {
     if (isActive(win)) windows.push_back(win);
   }
 
-  return windows.data();
+  return windows;
 }

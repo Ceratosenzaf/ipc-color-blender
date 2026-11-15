@@ -39,8 +39,7 @@ Bounds getBounds(GLFWwindow* win) {
 
 void handleRender(GLFWwindow* win, Color* color) {
   WindowInfo info = {getBounds(win), *color};
-  WindowInfo* allWindows = handleCommunication(&info);
-  createTexture(allWindows);
+  ColorMatrix matrix = getColorMatrix(info.bounds, handleCommunication(&info));
 
   glClearColor(color->r, color->g, color->b, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
