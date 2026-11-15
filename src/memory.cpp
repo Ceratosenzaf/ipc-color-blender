@@ -10,7 +10,7 @@
 #include "types.h"
 
 const char* SHARED_MEMORY_NAME = "memory";
-const int ACTIVE_THRESHOLD = 2;
+const int ACTIVE_THRESHOLD = 1;
 const int MEMORY_SIZE = sizeof(struct SharedMemory);
 
 int memoryIndex = -1;

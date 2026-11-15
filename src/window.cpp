@@ -41,9 +41,49 @@ void handleRender(GLFWwindow* win, Color* color) {
   WindowInfo info = {getBounds(win), *color};
   ColorMatrix matrix = getColorMatrix(info.bounds, handleCommunication(&info));
 
-  glClearColor(color->r, color->g, color->b, 1.0f);
+  glViewport(0, 0, info.bounds.w, info.bounds.h);
   glClear(GL_COLOR_BUFFER_BIT);
+
+  GLuint textureId;
+  glGenTextures(1, &textureId);
+
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, textureId);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, info.bounds.w, info.bounds.h, 0,
+               GL_RGB, GL_FLOAT, matrix.data());
+
+  glColor3f(1.0f, 1.0f, 1.0f);
+
+  glBegin(GL_QUADS);
+
+  // Bottom-Left screen -> Bottom-Left matrix
+  glTexCoord2f(0.0f, 1.0f);
+  glVertex2f(-1.0f, -1.0f);
+
+  // Bottom-Right screen -> Bottom-Right matrix
+  glTexCoord2f(1.0f, 1.0f);
+  glVertex2f(1.0f, -1.0f);
+
+  // Top-Right screen -> Top-Right matrix
+  glTexCoord2f(1.0f, 0.0f);
+  glVertex2f(1.0f, 1.0f);
+
+  // Top-Left screen -> Top-Left matrix
+  glTexCoord2f(0.0f, 0.0f);
+  glVertex2f(-1.0f, 1.0f);
+
+  glEnd();
+
   glfwSwapBuffers(win);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDeleteTextures(1, &textureId);
 }
 
 void handleTick(GLFWwindow* win, Color* color) {
