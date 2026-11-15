@@ -61,12 +61,14 @@ Color avgForPixel(std::vector<WindowInfo>* windows, int* x, int* y) {
 typedef std::vector<Color> ColorMatrix;
 ColorMatrix getColorMatrix(Bounds* bounds, std::vector<WindowInfo>* windows) {
   ColorMatrix matrix;
-
   matrix.reserve(bounds->w * bounds->h);
 
-  for (int y = bounds->y; y < bounds->y + bounds->h; y++) {
-    for (int x = bounds->x; x < bounds->x + bounds->w; x++) {
-      matrix.push_back(avgForPixel(windows, &x, &y));
+  for (int j = 0; j < bounds->h; j++) {
+    int y = bounds->y + j;
+    int rowOffset = j * bounds->w;
+    for (int i = 0; i < bounds->w; i++) {
+      int x = bounds->x + i;
+      matrix[rowOffset + i] = avgForPixel(windows, &x, &y);
     }
   }
 

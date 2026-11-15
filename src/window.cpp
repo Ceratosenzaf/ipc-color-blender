@@ -40,13 +40,13 @@ Bounds getBounds(GLFWwindow* win) {
   return Bounds{x, y, w, h};
 }
 
+// at 60FPS we have 16ms to complete rendering
 void handleRender(GLFWwindow* win, Color* color) {
   WindowInfo info = {getBounds(win), *color};
   auto windows = handleCommunication(&info);
-  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);
+  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);  // 30ms
 
   glViewport(0, 0, info.bounds.w, info.bounds.h);
-  glClear(GL_COLOR_BUFFER_BIT);
 
   GLuint textureId;
   glGenTextures(1, &textureId);
@@ -54,13 +54,12 @@ void handleRender(GLFWwindow* win, Color* color) {
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, textureId);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+  // TODO: recompute only the changed part, not the whole texture
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, info.bounds.w, info.bounds.h, 0,
-               GL_RGB, GL_FLOAT, matrix.data());
+               GL_RGB, GL_FLOAT, matrix.data());  // 4ms
 
   glColor3f(1.0f, 1.0f, 1.0f);
 
@@ -84,7 +83,7 @@ void handleRender(GLFWwindow* win, Color* color) {
 
   glEnd();
 
-  glfwSwapBuffers(win);
+  glfwSwapBuffers(win);  // 3 ms
 
   glBindTexture(GL_TEXTURE_2D, 0);
   glDeleteTextures(1, &textureId);
