@@ -4,12 +4,26 @@
 
 #include "types.h"
 
+int CURR_PALETTE_COLOR = 0;
+
 Color getRandomColor() {
   std::random_device rd;
   std::mt19937 mt(rd());
   std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
+  CURR_PALETTE_COLOR = -1;
   return Color{dist(mt), dist(mt), dist(mt)};
+}
+
+Color getNextPaletteColor() {
+  const int PALETTE_COLORS = 5;
+  const Color PALETTE[PALETTE_COLORS] = {
+      {1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0},
+      {1.0, 1.0, 1.0}, {0.0, 0.0, 0.0},
+  };
+
+  CURR_PALETTE_COLOR = (CURR_PALETTE_COLOR + 1) % PALETTE_COLORS;
+  return PALETTE[CURR_PALETTE_COLOR];
 }
 
 bool isOverlapping(Bounds lhs, Bounds rhs) {

@@ -23,10 +23,16 @@ void changeColorOnClick(GLFWwindow* win, Color* color) {
   glfwSetWindowUserPointer(win, color);
   glfwSetMouseButtonCallback(
       win, [](GLFWwindow* win, int button, int action, int mods) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        auto updateColor = [&win](Color newColor) {
           Color* color = static_cast<Color*>(glfwGetWindowUserPointer(win));
-          *color = getRandomColor();
-        }
+          *color = newColor;
+        };
+
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+          updateColor(getRandomColor());
+
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+          updateColor(getNextPaletteColor());
       });
 }
 
