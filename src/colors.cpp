@@ -25,50 +25,68 @@ Color getNextPaletteColor() {
   return PALETTE[paletteColorIndex];
 }
 
-bool isOverlapping(const Bounds* lhs, const Bounds* rhs) {
-  bool overlapX = lhs->x < rhs->x + rhs->w && lhs->x + lhs->w > rhs->x;
-  bool overlapY = lhs->y < rhs->y + rhs->h && lhs->y + lhs->h > rhs->y;
-  return overlapX && overlapY;
-}
-
-bool hasPixel(const Bounds* bounds, int* x, int* y) {
-  Bounds cell = {*x, *y, 1, 1};
-  return isOverlapping(bounds, &cell);
-}
-
 Color operator+(Color lhs, Color rhs) {
   return {lhs.r + rhs.r, lhs.g + rhs.g, lhs.b + rhs.b};
 }
 
-Color blend(Color acc, int count) {
-  return {acc.r / count, acc.g / count, acc.b / count};
+void blend(Color* acc, int* count) {
+  if (*count <= 1) return;
+  acc->r /= *count;
+  acc->g /= *count;
+  acc->b /= *count;
 }
 
-Color avgForPixel(std::vector<WindowInfo>* windows, int* x, int* y) {
-  Color acc = {0, 0, 0};
-  int count = 0;
+int max(int lhs, int rhs) {
+  if (lhs > rhs) return lhs;
+  return rhs;
+}
 
-  for (const WindowInfo& info : *windows) {
-    if (hasPixel(&info.bounds, x, y)) {
-      acc = acc + info.color;
-      count++;
-    }
-  }
+int min(int lhs, int rhs) {
+  if (lhs < rhs) return lhs;
+  return rhs;
+}
 
-  return blend(acc, count);
+void restrictToBounds(Bounds* src, Bounds* dst) {
+  int maxX = min(src->x + src->w, dst->x + dst->w);
+  int maxY = min(src->y + src->h, dst->y + dst->h);
+  src->x = max(src->x, dst->x);
+  src->y = max(src->y, dst->y);
+  src->w = max(maxX - src->x, 0);
+  src->h = max(maxY - src->y, 0);
 }
 
 typedef std::vector<Color> ColorMatrix;
 ColorMatrix getColorMatrix(Bounds* bounds, std::vector<WindowInfo>* windows) {
-  ColorMatrix matrix;
-  matrix.reserve(bounds->w * bounds->h);
+  ColorMatrix matrix(bounds->w * bounds->h, Color{0, 0, 0});
+  std::vector<int> counts(bounds->w * bounds->h, 0);
+
+  for (WindowInfo& info : *windows) {
+    restrictToBounds(&info.bounds, bounds);
+
+    if (info.bounds.w <= 0 || info.bounds.h <= 0) continue;
+
+    for (int j = 0; j < info.bounds.h; j++) {
+      int rowOffset = (info.bounds.y + j - bounds->y) * bounds->w;
+      int cellOffset = rowOffset + info.bounds.x - bounds->x;
+
+      Color* rowMatrix = matrix.data() + cellOffset;
+      int* rowCounts = counts.data() + cellOffset;
+
+      for (int i = 0; i < info.bounds.w; i++) {
+        rowMatrix[i] = rowMatrix[i] + info.color;
+        rowCounts[i]++;
+      }
+    }
+  }
 
   for (int j = 0; j < bounds->h; j++) {
-    int y = bounds->y + j;
     int rowOffset = j * bounds->w;
+
+    Color* rowMatrix = matrix.data() + rowOffset;
+    int* rowCounts = counts.data() + rowOffset;
+
     for (int i = 0; i < bounds->w; i++) {
-      int x = bounds->x + i;
-      matrix[rowOffset + i] = avgForPixel(windows, &x, &y);
+      blend(&rowMatrix[i], &rowCounts[i]);
     }
   }
 

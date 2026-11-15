@@ -44,7 +44,7 @@ Bounds getBounds(GLFWwindow* win) {
 void handleRender(GLFWwindow* win, Color* color) {
   WindowInfo info = {getBounds(win), *color};
   auto windows = handleCommunication(&info);
-  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);  // 30ms
+  ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);  // 10ms
 
   glViewport(0, 0, info.bounds.w, info.bounds.h);
 
