@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 
 struct Bounds {
   int x, y;
@@ -9,10 +10,12 @@ struct Color {
   float r, g, b;
 };
 
+typedef std::chrono::milliseconds Time;
+
 struct WindowInfo {
   Bounds bounds;
   Color color;
-  time_t updatedAt;
+  Time updatedAt;
 };
 
 const int SHARED_MEMORY_PAGE_SIZE = 10;

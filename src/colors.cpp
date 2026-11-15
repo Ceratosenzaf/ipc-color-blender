@@ -1,17 +1,16 @@
 
-#include <iostream>
 #include <random>
 
 #include "types.h"
 
-int CURR_PALETTE_COLOR = 0;
+int paletteColorIndex = 0;
 
 Color getRandomColor() {
   std::random_device rd;
   std::mt19937 mt(rd());
   std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-  CURR_PALETTE_COLOR = -1;
+  paletteColorIndex = -1;
   return Color{dist(mt), dist(mt), dist(mt)};
 }
 
@@ -22,8 +21,8 @@ Color getNextPaletteColor() {
       {1.0, 1.0, 1.0}, {0.0, 0.0, 0.0},
   };
 
-  CURR_PALETTE_COLOR = (CURR_PALETTE_COLOR + 1) % PALETTE_COLORS;
-  return PALETTE[CURR_PALETTE_COLOR];
+  paletteColorIndex = (paletteColorIndex + 1) % PALETTE_COLORS;
+  return PALETTE[paletteColorIndex];
 }
 
 bool isOverlapping(Bounds lhs, Bounds rhs) {
@@ -40,7 +39,7 @@ Color operator+(Color lhs, Color rhs) {
   return {lhs.r + rhs.r, lhs.g + rhs.g, lhs.b + rhs.b};
 }
 
-Color avg(Color acc, int count) {
+Color blend(Color acc, int count) {
   return {acc.r / count, acc.g / count, acc.b / count};
 }
 
@@ -55,7 +54,7 @@ Color avgForPixel(std::vector<WindowInfo> windows, int x, int y) {
     }
   }
 
-  return avg(acc, count);
+  return blend(acc, count);
 }
 
 typedef std::vector<Color> ColorMatrix;

@@ -4,22 +4,22 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include <iostream>
+#include <chrono>
 #include <vector>
 
 #include "types.h"
 
-const char* SHARED_MEMORY_NAME = "memory";
-const int ACTIVE_THRESHOLD = 1;
-const int MEMORY_SIZE = sizeof(struct SharedMemory);
-
 int memoryIndex = -1;
 
-time_t now() { return time(0); }
+Time now() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch());
+}
 
 bool isActive(WindowInfo info) {
-  time_t elapsed = now() - info.updatedAt;
-  return elapsed <= ACTIVE_THRESHOLD;
+  const int ACTIVE_THRESHOLD = 100;
+  Time elapsed = now() - info.updatedAt;
+  return elapsed.count() <= ACTIVE_THRESHOLD;
 }
 
 void upsertMemoryIndex(SharedMemory* mem) {
@@ -39,6 +39,9 @@ void upsertWindowInfo(SharedMemory* mem, WindowInfo* info) {
 }
 
 std::vector<WindowInfo> handleCommunication(WindowInfo* info) {
+  const char* SHARED_MEMORY_NAME = "memory";
+  const int MEMORY_SIZE = sizeof(struct SharedMemory);
+
   int fd = shm_open(SHARED_MEMORY_NAME, O_RDWR | O_CREAT, 0600);
 
   ftruncate(fd, MEMORY_SIZE);
