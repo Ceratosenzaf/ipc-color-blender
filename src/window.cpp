@@ -8,8 +8,7 @@ const int WIN_W = 400;
 const int WIN_H = 400;
 const char* WIN_TITLE = "Color Blender";
 
-const double REFRESH_RATE = 1.0 / 60.0;  // 60FPS
-double lastRefresh = 0;
+const int REFRESH_MS = 10;  // 100FPS
 
 void handleClose(GLFWwindow* win) {
   if (win) glfwDestroyWindow(win);
@@ -90,13 +89,7 @@ void handleRender(GLFWwindow* win, Color* color) {
 }
 
 void handleTick(GLFWwindow* win, Color* color) {
-  double now = glfwGetTime();
-  double elapsed = now - lastRefresh;
-
-  if (elapsed >= REFRESH_RATE) {
-    handleRender(win, color);
-    lastRefresh = now;
-  }
+  if (now() % REFRESH_MS == 0) handleRender(win, color);
 }
 
 void handleWindow() {
@@ -109,6 +102,7 @@ void handleWindow() {
   changeColorOnClick(win, &color);
 
   glfwMakeContextCurrent(win);
+  glfwSwapInterval(0);
 
   while (!glfwWindowShouldClose(win)) {
     handleTick(win, &color);
