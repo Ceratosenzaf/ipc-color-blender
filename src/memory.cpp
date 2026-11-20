@@ -4,7 +4,6 @@
 #include <unistd.h>
 
 #include <chrono>
-#include <iostream>
 #include <vector>
 
 #include "lock.cpp"
@@ -46,28 +45,32 @@ void upsertWindowInfo(WindowInfo* info) {
   (mem->windows)[memoryIndex] = *info;
 }
 
-void initCommunication() {
-  if (mem) return;
+bool setupCommunication() {
+  if (mem) return true;
 
   const char* SHARED_MEMORY_NAME = "/ipc-color-blender.data";
   const int MEMORY_SIZE = sizeof(SharedMemory);
 
   int fd = shm_open(SHARED_MEMORY_NAME, O_RDWR | O_CREAT, 0600);
 
-  ftruncate(fd, MEMORY_SIZE);
+  if (ftruncate(fd, MEMORY_SIZE) == -1) return false;
 
-  mem = static_cast<SharedMemory*>(
-      mmap(NULL, MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
+  auto* pt = mmap(NULL, MEMORY_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (!pt) return false;
 
   close(fd);
+  mem = static_cast<SharedMemory*>(pt);
+
+  return true;
 }
 
 std::vector<WindowInfo> handleCommunication(WindowInfo* info) {
-  initCommunication();
+  std::vector<WindowInfo> windows;
+
+  if (!setupCommunication()) return windows;
 
   upsertWindowInfo(info);
 
-  std::vector<WindowInfo> windows;
   for (WindowInfo& win : mem->windows)
     if (isActive(&win)) windows.push_back(win);
 

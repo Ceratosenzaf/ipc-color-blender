@@ -1,5 +1,7 @@
 #include <GLFW/glfw3.h>
 
+#include <thread>
+
 #include "colors.cpp"
 #include "memory.cpp"
 #include "types.h"
@@ -7,18 +9,23 @@
 const int WIN_W = 400;
 const int WIN_H = 400;
 const char* WIN_TITLE = "Color Blender";
+const int WIN_REFRESH_MS = 10;  // 100FPS
 
-const int REFRESH_MS = 10;  // 100FPS
+GLFWwindow* window;
+GLuint textureId;
+Color color;
 
-void handleClose(GLFWwindow* win) {
-  if (win) glfwDestroyWindow(win);
+void handleClose() {
+  glBindTexture(GL_TEXTURE_2D, 0);
+  if (textureId) glDeleteTextures(1, &textureId);
+  if (window) glfwDestroyWindow(window);
   glfwTerminate();
 }
 
-void changeColorOnClick(GLFWwindow* win, Color* color) {
-  glfwSetWindowUserPointer(win, color);
+void changeColorOnClick() {
+  glfwSetWindowUserPointer(window, &color);
   glfwSetMouseButtonCallback(
-      win, [](GLFWwindow* win, int button, int action, int mods) {
+      window, [](GLFWwindow* win, int button, int action, int mods) {
         auto updateColor = [&win](Color newColor) {
           Color* color = static_cast<Color*>(glfwGetWindowUserPointer(win));
           *color = newColor;
@@ -32,29 +39,19 @@ void changeColorOnClick(GLFWwindow* win, Color* color) {
       });
 }
 
-Bounds getBounds(GLFWwindow* win) {
+Bounds getBounds() {
   int x, y, w, h;
-  glfwGetWindowPos(win, &x, &y);
-  glfwGetWindowSize(win, &w, &h);
+  glfwGetWindowPos(window, &x, &y);
+  glfwGetWindowSize(window, &w, &h);
   return Bounds{x, y, w, h};
 }
 
-// at 60FPS we have 16ms to complete rendering
-void handleRender(GLFWwindow* win, Color* color) {
-  WindowInfo info = {getBounds(win), *color};
+void handleRender() {
+  WindowInfo info = {getBounds(), color};
   auto windows = handleCommunication(&info);
   ColorMatrix matrix = getColorMatrix(&info.bounds, &windows);
 
   glViewport(0, 0, info.bounds.w, info.bounds.h);
-
-  GLuint textureId;
-  glGenTextures(1, &textureId);
-
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, textureId);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   // TODO: recompute only the changed part, not the whole texture
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, info.bounds.w, info.bounds.h, 0,
@@ -82,32 +79,42 @@ void handleRender(GLFWwindow* win, Color* color) {
 
   glEnd();
 
-  glfwSwapBuffers(win);
-
-  glBindTexture(GL_TEXTURE_2D, 0);
-  glDeleteTextures(1, &textureId);
+  glfwSwapBuffers(window);
 }
 
-void handleTick(GLFWwindow* win, Color* color) {
-  if (now() % REFRESH_MS == 0) handleRender(win, color);
+void handleTick() {
+  Time start = now();
+  handleRender();
+  Time sleep = WIN_REFRESH_MS - (now() - start);
+  std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+}
+
+void setupWindow() {
+  if (!glfwInit()) return handleClose();
+
+  window = glfwCreateWindow(WIN_W, WIN_H, WIN_TITLE, NULL, NULL);
+  if (!window) return handleClose();
+
+  color = getRandomColor();
+  changeColorOnClick();
+
+  glfwMakeContextCurrent(window);
+  glfwSwapInterval(0);
+
+  glGenTextures(1, &textureId);
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, textureId);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 void handleWindow() {
-  if (!glfwInit()) return handleClose(NULL);
+  setupWindow();
 
-  GLFWwindow* win = glfwCreateWindow(WIN_W, WIN_H, WIN_TITLE, NULL, NULL);
-  if (!win) return handleClose(NULL);
-
-  Color color = getRandomColor();
-  changeColorOnClick(win, &color);
-
-  glfwMakeContextCurrent(win);
-  glfwSwapInterval(0);
-
-  while (!glfwWindowShouldClose(win)) {
-    handleTick(win, &color);
+  while (!glfwWindowShouldClose(window)) {
+    handleTick();
     glfwPollEvents();
   }
 
-  return handleClose(win);
+  return handleClose();
 }
