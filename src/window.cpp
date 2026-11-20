@@ -83,9 +83,9 @@ void handleRender() {
 }
 
 void handleTick() {
-  Time start = now();
+  Time start = getNow();
   handleRender();
-  Time sleep = WIN_REFRESH_MS - (now() - start);
+  Time sleep = WIN_REFRESH_MS - getElapsed(start);
   std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
 }
 

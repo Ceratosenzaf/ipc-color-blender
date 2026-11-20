@@ -7,22 +7,16 @@
 #include <vector>
 
 #include "lock.cpp"
+#include "time.cpp"
 #include "types.h"
 
 SharedMemory* mem;
 int memoryIndex = -1;
 
-Time now() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::system_clock::now().time_since_epoch())
-      .count();
-}
-
 const int RUNNING_THRESHOLD = 100;
 const int INIT_THRESHOLD = 1000;
 bool isActive(WindowInfo* info, int threshold = RUNNING_THRESHOLD) {
-  Time elapsed = now() - info->updatedAt;
-  return elapsed <= threshold;
+  return getElapsed(info->updatedAt) <= threshold;
 }
 
 void upsertMemoryIndex() {
@@ -33,7 +27,7 @@ void upsertMemoryIndex() {
   for (int i = 0; i < SHARED_MEMORY_PAGE_SIZE; i++) {
     if (!isActive(&(mem->windows)[i], INIT_THRESHOLD)) {
       memoryIndex = i;
-      (mem->windows)[memoryIndex].updatedAt = now();
+      (mem->windows)[memoryIndex].updatedAt = getNow();
       return;
     }
   }
@@ -41,7 +35,7 @@ void upsertMemoryIndex() {
 
 void upsertWindowInfo(WindowInfo* info) {
   upsertMemoryIndex();
-  info->updatedAt = now();
+  info->updatedAt = getNow();
   (mem->windows)[memoryIndex] = *info;
 }
 
